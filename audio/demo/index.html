@@ -111,7 +111,7 @@
     <div class="row">
       <input type="file" id="file" accept=".wav,.mp3,.flac,audio/*">
       <button id="go" disabled>분석하기</button>
-      <span id="status" class="muted">WAV/MP3/FLAC, 4~120초</span>
+      <span id="status" class="muted">WAV/MP3/FLAC, 4~500초</span>
     </div>
     <audio id="player" controls hidden></audio>
   </div>
@@ -169,7 +169,7 @@ $("file").addEventListener("change", () => {
   if (player.src) URL.revokeObjectURL(player.src);
   if (f && f.size > MAX_BYTES) { $("go").disabled = true; player.hidden = true; $("status").textContent = "25MB 이하 파일만 분석합니다."; return; }
   $("go").disabled = !f;
-  $("status").textContent = "WAV/MP3/FLAC, 4~120초";
+  $("status").textContent = "WAV/MP3/FLAC, 4~500초";
   if (f) { player.src = URL.createObjectURL(f); player.hidden = false; }
 });
 

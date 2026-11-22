@@ -53,16 +53,18 @@ def analyze(request: Request, file: UploadFile = File(...)):
     if not data or len(data) > MAX_BYTES:
         raise HTTPException(status_code=413, detail="파일이 비었거나 25MB를 넘습니다.")
     started = time.time()
-    too_short = JSONResponse({"error": "4~120초 길이의 음성만 분석합니다(앞뒤 무음 제외 4초 이상)."}, status_code=422)
+    too_short = JSONResponse({"error": "앞뒤 무음을 제외하고 4초 이상인 음성만 분석합니다."}, status_code=422)
     try:
         x, duration, trim0 = dc.decode(data)
     except dc.TooShort:
         return too_short
+    except dc.TooLong:
+        return JSONResponse({"error": f"{dc.MAX_DURATION_SECONDS}초 이하의 음성만 분석합니다."}, status_code=422)
     except Exception:
         return JSONResponse({"error": "오디오를 읽을 수 없습니다(WAV/MP3/FLAC)."}, status_code=422)
     finally:
         del data
-    if not 4 <= duration <= 120:
+    if duration < 4:
         return too_short
     with LOCK:
         t0 = time.time()

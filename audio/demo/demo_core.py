@@ -17,6 +17,7 @@ from scipy.io import wavfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SR, HOP_B = 16000, 2560
+MAX_DURATION_SECONDS = 500
 WIN_B, STEP_B = 128000, 64000          # 8 s windows, 4 s hop for BAM
 MIN_SEG, MIN_GAP, BOUND_T = 0.5, 0.3, 0.5
 V1 = dict(t_low=-2.132084210713705, t_warn=-0.5011004805564879)   # bundles/nii-small-v1/calibration.json
@@ -36,15 +37,22 @@ class TooShort(ValueError):
     """Decoded fine, but less than 4 s of speech remains after the front-end edge trim."""
 
 
+class TooLong(ValueError):
+    """The decoded audio exceeded the analysis duration limit."""
+
+
 def decode(data: bytes):
     with tempfile.TemporaryDirectory() as d:
         src, out = Path(d) / "in", Path(d) / "out.wav"
         src.write_bytes(data)
         subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", str(src), "-map", "0:a:0", "-vn",
-                        "-t", "121", "-c:a", "pcm_s16le", str(out)], check=True, timeout=30)
+                        # Read one extra second to detect inputs that exceed the limit.
+                        "-t", str(MAX_DURATION_SECONDS + 1), "-c:a", "pcm_s16le", str(out)], check=True, timeout=30)
         pcm = out.read_bytes()
     rate, raw = wavfile.read(io.BytesIO(pcm))
     duration = len(raw) / rate
+    if duration > MAX_DURATION_SECONDS:
+        raise TooLong(duration)
     x, _ = FRONT.canonical(pcm)
     t0, t1, _ = FRONT.edge_trim(x)
     if t1 - t0 < FRONT.MIN_SAMPLES:
