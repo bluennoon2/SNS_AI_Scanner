@@ -1,0 +1,23 @@
+{
+  "threshold": 0.84,
+  "mode": "target_fpr",
+  "target_fpr": [0.05],
+  "selected_on": "validation",
+  "note": "val target_fpr<=0.05 → thr=0.84. auto target_fpr<=0.03이 thr=0.98(FNR=1)로 붕괴해 운영 후보에서 제외. fixed_0.5도 병행 보고.",
+  "alternatives": {
+    "fixed_0.5": {"threshold": 0.5, "val_fpr": 0.0875, "val_f1": 0.9375},
+    "target_fpr_0.05": {"threshold": 0.84, "val_fpr": 0.05, "val_f1": 0.9487},
+    "rejected_target_fpr_0.03": {"threshold": 0.98, "val_fpr": 0.0, "val_f1": 0.0, "reason": "all-negative"}
+  },
+  "val_metrics": {
+    "n": 158,
+    "threshold": 0.84,
+    "accuracy": 0.9493670886075949,
+    "precision": 0.9487179487179487,
+    "recall": 0.9487179487179487,
+    "f1": 0.9487179487179487,
+    "roc_auc": 0.9807692307692308,
+    "fpr": 0.05,
+    "fnr": 0.05128205128205128
+  }
+}

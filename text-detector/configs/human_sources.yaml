@@ -1,0 +1,269 @@
+# 사람(label=0) 공개 말뭉치 후보.
+# verified: true = probe로 소량 로드 확인됨. trust_remote_code 미사용.
+# 가급적 LLM 확산 이전(대략 2022년 이전) 수집 코퍼스를 우선.
+# 라이선스 확인·학습 사용 적합성은 사용자 책임.
+
+sources:
+  # --- 기존 후보 (제외 사유 유지) ---
+  - hf_id: "nsmc"
+    split: "train"
+    text_field: "document"
+    source_type: "review"
+    license: "cc-by-2.0"
+    enabled: false
+    allow_toxic: false
+    verified: false
+    collected_before: "2015"
+    checked_at: "2026-11-20"
+    reason: "로더 스크립트만 있고 parquet/csv/jsonl 없음 — 제외. 미러 Blpeng/nsmc 사용."
+    note: "원본 NSMC 스크립트 로더. datasets 최신에서 거부됨."
+
+  - hf_id: "searle-j/kote"
+    split: "train"
+    text_field: "text"
+    source_type: "comment"
+    license: "mit"
+    enabled: false
+    allow_toxic: true
+    verified: false
+    collected_before: "unknown"
+    checked_at: "2026-11-20"
+    reason: "load_dataset 실패(RuntimeError). 혐오표현 중심 — 기본 비활성."
+    note: "혐오표현 라벨 댓글 후보."
+
+  - hf_id: "klue/ynat"
+    split: "train"
+    text_field: "title"
+    source_type: "post"
+    license: "CC-BY-SA-4.0"
+    enabled: false
+    allow_toxic: false
+    verified: false
+    collected_before: "2021"
+    checked_at: "2026-11-20"
+    reason: "dataset_info 실패(RepositoryNotFoundError) — Hub에서 접근 불가."
+    note: "뉴스 제목 — SNS 문체와 다를 수 있음."
+
+  # --- probe 통과 + SNS 탐지용으로 권장 (enabled) ---
+  - hf_id: "Blpeng/nsmc"
+    split: "train"
+    text_field: "document"
+    source_type: "review"
+    license: "unknown"
+    enabled: true
+    allow_toxic: false
+    verified: true
+    collected_before: "2015"
+    checked_at: "2026-11-20"
+    length_profile:
+      n: 200
+      mean_len: 35.9
+      buckets: { "<20": 79, "20~100": 105, ">100": 16 }
+      mean_hangul_ratio: 0.749
+    ai_mix_warning: false
+    reason: "probe 통과. NSMC parquet 미러. 원본 수집 ~2015라 AI 혼입 위험 낮음."
+    note: "영화 리뷰. >100자 구간 희소. 작성자 ID 없음 → group은 텍스트 해시만."
+
+  - hf_id: "LLM-SocialMedia/Korean-YouTube-Comment-Sentiment-Dataset"
+    split: "train"
+    text_field: "text"
+    source_type: "comment"
+    license: "other"
+    enabled: true
+    allow_toxic: false
+    verified: true
+    collected_before: "unknown"
+    checked_at: "2026-11-20"
+    length_profile:
+      n: 200
+      mean_len: 43.8
+      buckets: { "<20": 73, "20~100": 105, ">100": 22 }
+      mean_hangul_ratio: 0.643
+    ai_mix_warning: true
+    reason: "probe 통과. 유튜브 댓글 — SNS 문체에 근접. 수집시기 불명 → AI 혼입 경고."
+    note: "라이선스 other — 학습 사용 전 카드/약관 확인 필요."
+
+  # --- llm_v3: 비혐오 필터된 공개 댓글 (혐오=사람 지름길 방지) ---
+  - hf_id: "humane-lab/K-HATERS"
+    split: "train"
+    text_field: "text"
+    source_type: "comment"
+    license: "unknown"
+    enabled: true
+    allow_toxic: false
+    verified: true
+    collected_before: "2021"
+    checked_at: "2026-11-22"
+    row_filters:
+      - column: label
+        allow: ["normal"]
+    ai_mix_warning: false
+    reason: "llm_v3. label=normal만 사용 — 혐오/공격 라벨 제외로 주제 지름길 완화."
+    note: "네이버 뉴스 댓글(2021). 전체 라벨 중 normal만 학습 반영."
+
+  - hf_id: "nayohan/KOLD"
+    split: "train"
+    text_field: "comment"
+    source_type: "comment"
+    license: "unknown"
+    enabled: true
+    allow_toxic: false
+    verified: true
+    collected_before: "2021"
+    checked_at: "2026-11-22"
+    group_col: "guid"
+    row_filters:
+      - column: "OFF"
+        allow: [false, "False", 0]
+    ai_mix_warning: false
+    reason: "llm_v3. OFF=False(비공격)만 사용."
+    note: "뉴스 댓글. guid로 group 가능."
+
+  - hf_id: "smilegate-ai/kor_unsmile"
+    split: "train"
+    text_field: "문장"
+    source_type: "comment"
+    license: "unknown"
+    enabled: true
+    allow_toxic: false
+    verified: true
+    collected_before: "unknown"
+    checked_at: "2026-11-22"
+    row_filters:
+      - column: clean
+        allow: [1, true, "1"]
+    ai_mix_warning: false
+    reason: "llm_v3. clean=1만 사용 — 비혐오 구어체."
+    note: "혐오 멀티라벨 코퍼스에서 clean 행만."
+
+  # --- probe 통과했으나 기본 비활성 (문체/중복/독성) ---
+  - hf_id: "jwengr/DACON-Korean-Review-Obfuscation"
+    split: "train"
+    text_field: "sentence"
+    source_type: "review"
+    license: "unknown"
+    enabled: false
+    allow_toxic: false
+    verified: true
+    collected_before: "unknown"
+    checked_at: "2026-11-20"
+    length_profile:
+      n: 200
+      mean_len: 95.8
+      buckets: { "<20": 21, "20~100": 116, ">100": 63 }
+      mean_hangul_ratio: 0.707
+    ai_mix_warning: true
+    reason: "probe 통과. 리뷰 obfuscation 과제 데이터 — 자연 SNS와 다를 수 있어 기본 비활성."
+    note: ">100 비율이 상대적으로 높음. 필요 시 enabled 전환."
+
+  - hf_id: "ewhk9887/korean_code_review"
+    split: "train"
+    text_field: "review"
+    source_type: "review"
+    license: "gpl-3.0"
+    enabled: false
+    allow_toxic: false
+    verified: true
+    checked_at: "2026-11-20"
+    length_profile:
+      n: 47
+      mean_len: 50.1
+      buckets: { "<20": 13, "20~100": 31, ">100": 3 }
+      mean_hangul_ratio: 0.409
+    ai_mix_warning: true
+    reason: "probe 통과. GitHub 코드 리뷰 — SNS 문체와 달라 기본 비활성."
+    collected_before: "unknown"
+
+  - hf_id: "ewhk9887/korean_code_reviews_from_github"
+    split: "train"
+    text_field: "review"
+    source_type: "review"
+    license: "mit"
+    enabled: false
+    allow_toxic: false
+    verified: true
+    checked_at: "2026-11-20"
+    length_profile:
+      n: 200
+      mean_len: 137.4
+      buckets: { "<20": 11, "20~100": 108, ">100": 81 }
+      mean_hangul_ratio: 0.549
+    ai_mix_warning: true
+    reason: "probe 통과. GitHub 코드 리뷰 — SNS 문체와 달라 기본 비활성. (>100은 풍부)"
+    collected_before: "unknown"
+
+  - hf_id: "HYUKI5/LLM-SocialMedia__Korean-YouTube-Comment-Sentiment-Dataset"
+    split: "train"
+    text_field: "text"
+    source_type: "comment"
+    license: "other"
+    enabled: false
+    allow_toxic: false
+    verified: true
+    checked_at: "2026-11-20"
+    length_profile:
+      n: 200
+      mean_len: 43.8
+      buckets: { "<20": 73, "20~100": 105, ">100": 22 }
+      mean_hangul_ratio: 0.643
+    ai_mix_warning: true
+    reason: "probe 통과. LLM-SocialMedia 원본의 미러/복제 — 중복 방지로 비활성."
+    collected_before: "unknown"
+
+  - hf_id: "iamyuna/kcbert-nsmc-tokenizer"
+    split: "train"
+    text_field: "retrieved_contexts"
+    source_type: "review"
+    license: "unknown"
+    enabled: false
+    allow_toxic: false
+    verified: true
+    checked_at: "2026-11-20"
+    length_profile:
+      n: 25
+      mean_len: 482.8
+      buckets: { "<20": 0, "20~100": 0, ">100": 25 }
+      mean_hangul_ratio: 0.662
+    ai_mix_warning: true
+    reason: "probe 통과. 토크나이저/검색 컨텍스트 데이터 — SNS 본문 코퍼스가 아님. 비활성."
+    collected_before: "unknown"
+
+  - hf_id: "nayohan/korean-hate-speech"
+    split: "train"
+    text_field: "news_title"
+    source_type: "comment"
+    license: "cc-by-sa-4.0"
+    enabled: false
+    allow_toxic: true
+    verified: true
+    checked_at: "2026-11-20"
+    length_profile:
+      n: 200
+      mean_len: 42.7
+      buckets: { "<20": 0, "20~100": 200, ">100": 0 }
+      mean_hangul_ratio: 0.548
+    ai_mix_warning: true
+    reason: "probe 통과. 혐오/뉴스 제목 중심 — 기본 비활성. text_field=news_title."
+    collected_before: "unknown"
+
+_meta:
+  probed_at: "2026-11-22"
+  enabled_recommended:
+    - Blpeng/nsmc
+    - LLM-SocialMedia/Korean-YouTube-Comment-Sentiment-Dataset
+    - humane-lab/K-HATERS  # row_filters: label=normal
+    - nayohan/KOLD  # row_filters: OFF=False
+    - smilegate-ai/kor_unsmile  # row_filters: clean=1
+  ood_reserved:
+    - nayohan/APEACH  # 학습 미사용 — ood_comment 사람 측
+    - keepsteady/LGC_test  # ood_comment AI 측
+    - HAERAE-HUB/KOREAN-SyntheticText-1.5B
+    - HAERAE-HUB/KOREAN-WEBTEXT
+  external_ai_train:
+    - keepsteady/XDAC_LLM_comments_kor  # 생성댓글 → data/external/xdac_ai_generated.csv
+  group_leakage_limit: |
+    작성자/스레드 ID가 없는 코퍼스는 텍스트 정규화 해시로만 group이 묶이므로
+    같은 작성자의 서로 다른 글이 train/test에 섞이는 누수는 통제할 수 없다.
+  length_gap_note: |
+    공개 리뷰/댓글은 >100자 구간이 부족한 경우가 많다. 억지로 이어붙이지 말고
+    로컬 장문 파일 추가 또는 해당 버킷 비중 조정(--length_mix)으로 대응한다.

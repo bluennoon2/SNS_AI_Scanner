@@ -1,0 +1,9 @@
+# 데이터 구축 전용 선택 의존성 (pip install -r requirements-data.txt)
+# LLM SDK는 lazy import — 미설치여도 mock/다른 기능은 동작한다.
+python-dotenv>=1.0.0
+pyyaml>=6.0
+huggingface_hub>=0.20.0
+# 사용하는 provider만 설치하세요:
+# google-genai>=1.0.0            # Gemini 전용 (google-generativeai 폴백 없음)
+# openai>=1.0.0
+# anthropic>=0.30.0

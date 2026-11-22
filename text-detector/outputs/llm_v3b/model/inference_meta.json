@@ -1,0 +1,24 @@
+{
+  "base_model": "beomi/KcELECTRA-base",
+  "max_length": 128,
+  "threshold": 0.84,
+  "threshold_mode": "target_fpr",
+  "label_map": {
+    "0": "human",
+    "1": "ai"
+  },
+  "preprocess_options": {
+    "collapse_repeats": false,
+    "max_repeat": null,
+    "newline_token": false
+  },
+  "loss": "ce",
+  "seed": 42,
+  "created_at": "2026-11-22T09:38:18.826655+00:00",
+  "library_versions": {
+    "torch": "2.15.0+cpu",
+    "transformers": "5.23.0",
+    "datasets": "5.2.0"
+  },
+  "train_data_hash": "689cab5ca09ccea8"
+}
